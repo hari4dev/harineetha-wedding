@@ -1,0 +1,1 @@
+{"scripts":{"dev":"vite --host 0.0.0.0","build":"vite build","preview":"vite preview"},"dependencies":{"@studio-freight/lenis":"latest","@vitejs/plugin-react":"latest","canvas-confetti":"latest","framer-motion":"latest","gsap":"latest","lucide-react":"latest","react":"latest","react-dom":"latest","sharp":"^0.35.3","vite":"latest"}}
