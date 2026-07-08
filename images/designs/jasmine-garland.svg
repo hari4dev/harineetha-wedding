@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 180" fill="none">
+  <path d="M20 22c140 110 340 110 480 0" stroke="#618A2C" stroke-width="10" stroke-linecap="round"/>
+  <g fill="#FFF8ED" stroke="#D7B35A" stroke-width="2">
+    <script type="application/ecmascript"><![CDATA[]]></script>
+    <circle cx="60" cy="56" r="16"/><circle cx="95" cy="78" r="16"/><circle cx="132" cy="96" r="16"/><circle cx="172" cy="112" r="16"/><circle cx="214" cy="121" r="16"/><circle cx="260" cy="126" r="16"/><circle cx="306" cy="121" r="16"/><circle cx="348" cy="112" r="16"/><circle cx="388" cy="96" r="16"/><circle cx="425" cy="78" r="16"/><circle cx="460" cy="56" r="16"/>
+  </g>
+  <g fill="#6A8F32">
+    <ellipse cx="32" cy="34" rx="20" ry="9" transform="rotate(-35 32 34)"/><ellipse cx="488" cy="34" rx="20" ry="9" transform="rotate(35 488 34)"/>
+    <ellipse cx="250" cy="50" rx="16" ry="8" transform="rotate(15 250 50)"/>
+  </g>
+</svg>
