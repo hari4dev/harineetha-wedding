@@ -1,4 +1,4 @@
-import React, { useMemo, useRef, useState } from 'react';
+import React, { useMemo, useRef, useState, useEffect } from 'react';
 import { createRoot } from 'react-dom/client';
 import { motion, AnimatePresence } from 'framer-motion';
 import confetti from 'canvas-confetti';
@@ -239,7 +239,10 @@ function Countdown() {
     </section>
   );
 }
-function Events() { return <section className="section events"><h2>Wedding Celebrations</h2>{events.map((e, i) => <motion.article className="eventCard" key={e.id} initial={{ opacity: 0, y: 60 }} whileInView={{ opacity: 1, y: 0 }} transition={{ duration: .7 }}><div className="eventIcon">{e.icon}</div><div><h3>{e.title}</h3><h4>{e.date} | {e.time}</h4><p className="venue">📍 {e.venue} — {e.location}</p><p>{e.description}</p><a href={e.map}>View Location</a></div></motion.article>)}</section> }
+function Events() { return <section className="section events"><h2>Wedding Celebrations</h2>{events.map((e, i) => 
+<motion.article className="eventCard" key={e.id} initial={{ opacity: 0, y: 60 }} whileInView={{ opacity: 1, y: 0 }} 
+transition={{ duration: .7 }}><div className="eventIcon">{e.icon}</div><div><h3>{e.title}</h3><h4>{e.date} 
+| {e.time}</h4><p className="venue">📍 {e.venue} — {e.location}</p><p>{e.description}</p><a href={e.map}>View Location</a></div></motion.article>)}</section> }
 
 function Gallery() { return <section className="section gallery"><h2>Gallery</h2>
 {/* <p className="lead">Add your photos later inside <b>public/images/gallery</b> and update <b>src/data/siteContent.js</b>.</p> */}
@@ -255,7 +258,22 @@ function RSVP() {
   });
 
   const [submitted, setSubmitted] = useState(false);
+  const confirmationRef = useRef(null);
   const max = Number(form.groupSize) || 1;
+
+  useEffect(() => {
+    if (!submitted) return;
+    try {
+      if (confirmationRef.current) {
+        confirmationRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        confirmationRef.current.focus();
+      } else {
+        window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
+      }
+    } catch (e) {
+      // ignore
+    }
+  }, [submitted]);
 
   const update = (id, obj) =>
     setForm((f) => ({
@@ -274,13 +292,8 @@ function RSVP() {
 
   const eventIds = events.map((event) => event.id);
 
-  const hasSelectedEvent = eventIds.some(
-    (id) => form.rsvps?.[id]?.attending
-  );
-
   if (!form.name.trim()) return alert("Please enter your name.");
   if (!form.email.trim()) return alert("Please enter your email.");
-  if (!hasSelectedEvent) return alert("Please select at least one event.");
 
   const emailKey = form.email.trim().toLowerCase();
 
@@ -349,7 +362,9 @@ function RSVP() {
     "8S9vafjYNbuTwGQjx"
   );
 
-  confetti();
+  if (payload.preludeAttending || payload.haldiAttending || payload.weddingAttending) {
+    confetti();
+  }
   setSubmitted(true);
 } catch (error) {
   console.error("RSVP submit/email error:", error);
@@ -359,11 +374,26 @@ function RSVP() {
 };
 
   if (submitted) {
+    const attendingAny =
+      form.rsvps.prelude?.attending ||
+      form.rsvps.traditions?.attending ||
+      form.rsvps.muhurtham?.attending;
+
     return (
       <section className="section rsvp">
-        <div className="rsvpCard">
+        <div className="rsvpCard" ref={confirmationRef} tabIndex={-1}>
           <h2>RSVP Received ❤️</h2>
-          <p>Thank you, {form.name}. We can’t wait to celebrate with you!</p>
+          {attendingAny ? (
+            <p>Thank you, {form.name}. We can’t wait to celebrate with you!</p>
+          ) : (
+            <>
+              <p>Thank you, {form.name}. We’ll miss you at the celebration.</p>
+              <p>
+                Even though you won’t be with us in person, your blessings will always be part of our wedding celebrations.
+              </p>
+              <p>Thank you for your love and support.</p>
+            </>
+          )}
         </div>
       </section>
     );
@@ -471,6 +501,13 @@ function Footer() { return <footer><h2>{couple.logo}</h2><p>Every journey has a 
 function App() {
   const [open, setOpen] = useState(false);
   const bookOpenAudioRef = useRef(null);
+  useEffect(() => {
+    try {
+      window.scrollTo({ top: 0, left: 0 });
+    } catch (e) {
+      // ignore in non-browser environments
+    }
+  }, []);
 
   const handleOpenInvitation = () => {
     setOpen(true);
