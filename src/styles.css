@@ -426,22 +426,22 @@ footer h2 {
 
 .cityIcon {
     font-size: 64px;
-    margin-bottom: 18px;
+    margin-bottom: 4px;
     display: flex;
-    gap: 12px;
+    gap: 4px;
     flex-wrap: wrap;
     align-items: center;
 }
 
-.cityIcon svg {
-    width: 56px;
-    height: 56px;
-    padding: 4px;
-    border-radius: 16px;
+.cityIcon svg,
+.cityIcon img {
+    width: 48px;
+    height: 48px;
+    padding: 0;
+    border-radius: 12px;
     background: rgba(255, 255, 255, 0.75);
-    box-shadow: 0 8px 20px rgba(101, 51, 20, 0.12);
-    stroke-linecap: round;
-    stroke-linejoin: round;
+    box-shadow: 0 6px 14px rgba(101, 51, 20, 0.12);
+    object-fit: cover;
 }
 
 .cityPanel h3 {

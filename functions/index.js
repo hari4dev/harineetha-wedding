@@ -13,17 +13,17 @@ const transporter = nodemailer.createTransport({
 });
 
 exports.sendRsvpEmail = functions.firestore
-  .document("rsvps/{email}")
-  .onWrite(async (change, context) => {
-    const data = change.after.data();
+    .document("rsvps/{email}")
+    .onWrite(async (change, context) => {
+      const data = change.after.data();
 
-    if (!data) return null;
+      if (!data) return null;
 
-    const mailOptions = {
-      from: `"Hari & Neetha Wedding" <${functions.config().gmail.email}>`,
-      to: data.email,
-      subject: "RSVP Confirmation - Hari & Neetha Wedding",
-      html: `
+      const mailOptions = {
+        from: `"Hari & Neetha Wedding" <${functions.config().gmail.email}>`,
+        to: data.email,
+        subject: "RSVP Confirmation - Hari & Neetha Wedding",
+        html: `
         <h2>Thank you, ${data.name} ❤️</h2>
         <p>We received your RSVP.</p>
 
@@ -37,7 +37,7 @@ exports.sendRsvpEmail = functions.firestore
         <p>We can’t wait to celebrate with you!</p>
         <p>With love,<br/>Hari & Neetha</p>
       `,
-    };
+      };
 
-    return transporter.sendMail(mailOptions);
-  });
+      return transporter.sendMail(mailOptions);
+    });
