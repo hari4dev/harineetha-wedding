@@ -326,29 +326,55 @@ function Countdown() {
 
       <motion.div className="countdownContent">
         <p className="eyebrow">The Sacred Countdown</p>
-        <h2>Until We Begin Forever</h2>
+       <div className="countdownTitleWrapper">
+    <div className="divineRays"></div>
 
-        <div className="lotusDivider">
-          <span></span>
-          <img src={asset('images/designs/lotus.svg')} alt="" />
-          <span></span>
-        </div>
+    <h2 className="countdownTitle">
+        Until We Begin Forever
+    </h2>
+
+    <p className="countdownSubtitle">
+        Every moment brings us closer to our special day.
+    </p>
+</div>
 
         <div className="timerTemple">
-          {blocks.map((block) => (
-            <motion.div
-              key={block.label}
-              className="timePillar"
-              whileHover={{
-                y: -8,
-                scale: 1.05,
-              }}
-            >
-              <span>{String(block.value).padStart(2, "0")}</span>
-              <small>{block.label}</small>
-            </motion.div>
-          ))}
-        </div>
+  {blocks.map((block) => (
+    <motion.div
+      key={block.label}
+      className="timePillar"
+      whileHover={{
+        y: -8,
+        scale: 1.05,
+      }}
+    >
+      <div className="timeFlower" aria-hidden="true">
+        <svg viewBox="0 0 64 64">
+          <g
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.3"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <ellipse cx="32" cy="17" rx="5" ry="11" />
+            <ellipse cx="32" cy="47" rx="5" ry="11" />
+            <ellipse cx="17" cy="32" rx="5" ry="11" transform="rotate(90 17 32)" />
+            <ellipse cx="47" cy="32" rx="5" ry="11" transform="rotate(90 47 32)" />
+            <ellipse cx="21.5" cy="21.5" rx="5" ry="11" transform="rotate(-45 21.5 21.5)" />
+            <ellipse cx="42.5" cy="21.5" rx="5" ry="11" transform="rotate(45 42.5 21.5)" />
+            <ellipse cx="21.5" cy="42.5" rx="5" ry="11" transform="rotate(45 21.5 42.5)" />
+            <ellipse cx="42.5" cy="42.5" rx="5" ry="11" transform="rotate(-45 42.5 42.5)" />
+            <circle cx="32" cy="32" r="5" />
+          </g>
+        </svg>
+      </div>
+
+      <span>{String(block.value).padStart(2, "0")}</span>
+      <small>{block.label}</small>
+    </motion.div>
+  ))}
+</div>
 
         <p className="countdownQuote">
           Every sunrise brings us one step closer to celebrating our forever with you.
