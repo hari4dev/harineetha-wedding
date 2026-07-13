@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import confetti from 'canvas-confetti';
 import { couple, events, story, galleryImages, giftRegistry, liveStream, musicConfig } from './data/siteContent';
 import './styles.css';
-import { doc, setDoc, serverTimestamp } from "firebase/firestore";
+import { doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore";
 import { db } from "./firebase";
 import emailjs from "@emailjs/browser";
 
@@ -12,6 +12,124 @@ const ASSET_BASE = import.meta.env.BASE_URL || '/';
 const musicSrc = `${ASSET_BASE}music/wedding.mp3`;
 function asset(path) {
   return `${ASSET_BASE}${path}`.replace(/([^:]\/)\/+/g, '$1');
+}
+
+
+function normalizePhone(value = "") {
+  const digits = value.replace(/\D/g, "");
+  return digits.length === 11 && digits.startsWith("1")
+    ? digits.slice(1)
+    : digits;
+}
+
+function namesMatch(savedName = "", enteredName = "") {
+  const saved = savedName.trim().toLowerCase();
+  const entered = enteredName.trim().toLowerCase();
+
+  if (!saved || !entered) return true;
+
+  return saved.startsWith(entered) || entered.startsWith(saved);
+}
+
+function InvitationAccess({ onContinue }) {
+  const [name, setName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [checking, setChecking] = useState(false);
+
+  const continueToInvitation = async (e) => {
+    e.preventDefault();
+
+    const enteredName = name.trim();
+    const normalizedPhone = normalizePhone(phone);
+
+    if (!enteredName) {
+      alert("Please enter your first name.");
+      return;
+    }
+
+    if (normalizedPhone.length !== 10) {
+      alert("Please enter a valid 10-digit mobile number.");
+      return;
+    }
+
+    setChecking(true);
+
+    try {
+      const invitationRef = doc(db, "invitations", normalizedPhone);
+      const invitationSnap = await getDoc(invitationRef);
+
+      let inviteType = "wedding";
+let displayName = enteredName;
+
+if (invitationSnap.exists()) {
+  const invitationData = invitationSnap.data();
+
+  if (namesMatch(invitationData.name || "", enteredName)) {
+    inviteType = "all";
+    displayName = invitationData.name || enteredName;
+  }
+}
+
+const guest = {
+  name: displayName,
+  phone: normalizedPhone,
+  inviteType,
+};
+
+localStorage.setItem(
+  "weddingGuest",
+  JSON.stringify(guest)
+);
+
+onContinue(guest);
+    } catch (error) {
+      console.error("Invitation lookup error:", error);
+      alert("We could not open the invitation. Please try again.");
+    } finally {
+      setChecking(false);
+    }
+  };
+
+  return (
+    <section className="welcome invitationAccess">
+      <motion.div
+        initial={{ opacity: 0, y: 25 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="invitationAccessCard"
+      >
+        <img
+          src={asset("images/gallery/ganesha.png")}
+          alt="Ganesha"
+          className="heroGanesha"
+        />
+        <p className="eyebrow">Hari & Neetha</p>
+        <h1>Open Your Invitation</h1>
+        <p>Enter your first name and mobile number.</p>
+
+        <form onSubmit={continueToInvitation}>
+          <input
+            required
+            placeholder="First Name"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+          />
+
+          <input
+            required
+            type="tel"
+            inputMode="numeric"
+            placeholder="Mobile Number"
+            value={phone}
+            onChange={(e) => setPhone(e.target.value)}
+          />
+
+          <button type="submit" disabled={checking}>
+            {checking ? "Opening…" : "View Invitation"}
+          </button>
+        </form>
+      </motion.div>
+    </section>
+  );
 }
 
 function MusicButton({ opened }) {
@@ -239,20 +357,259 @@ function Countdown() {
     </section>
   );
 }
-function Events() { return <section className="section events"><h2>Wedding Celebrations</h2>{events.map((e, i) => 
-<motion.article className="eventCard" key={e.id} initial={{ opacity: 0, y: 60 }} whileInView={{ opacity: 1, y: 0 }} 
-transition={{ duration: .7 }}><div className="eventIcon">{e.icon}</div><div><h3>{e.title}</h3><h4>{e.date} 
-| {e.time}</h4><p className="venue">📍 {e.venue} — {e.location}</p><p>{e.description}</p><a href={e.map}>View Location</a></div></motion.article>)}</section> }
+function Events({ invitedEvents }) {
+  return (
+    <section className="section events">
+      <h2>Wedding Celebrations</h2>
+      {invitedEvents.map((e) => (
+        <motion.article
+          className="eventCard"
+          key={e.id}
+          initial={{ opacity: 0, y: 60 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.7 }}
+        >
+          <div className="eventIcon">{e.icon}</div>
+          <div>
+            <h3>{e.title}</h3>
+            <h4>{e.date} | {e.time}</h4>
+            <p className="venue">📍 {e.venue} — {e.location}</p>
+            <p>{e.description}</p>
+            <a href={e.map} target="_blank" rel="noopener noreferrer">
+              View Location
+            </a>
+          </div>
+        </motion.article>
+      ))}
+    </section>
+  );
+}
 
 function Gallery() { return <section className="section gallery"><h2>Gallery</h2>
 {/* <p className="lead">Add your photos later inside <b>public/images/gallery</b> and update <b>src/data/siteContent.js</b>.</p> */}
 <div className="grid">{galleryImages.map(g => <div className="photo" key={g.id}><div className="placeholder">{g.category}</div><h3>{g.title}</h3></div>)}</div></section> }
+function GuestCounter({
+  label,
+  value,
+  onDecrease,
+  onIncrease,
+}) {
+  return (
+    <div className="guestCounter">
+      <span className="guestCounterLabel">{label}</span>
 
-function RSVP() {
+      <div className="counterControls">
+        <button
+          type="button"
+          onClick={onDecrease}
+          disabled={value <= 0}
+          aria-label={`Decrease ${label}`}
+        >
+          −
+        </button>
+
+        <input
+          type="number"
+          value={value}
+          min="0"
+          readOnly
+          aria-label={`${label} count`}
+        />
+
+        <button
+          type="button"
+          onClick={onIncrease}
+          aria-label={`Increase ${label}`}
+        >
+          +
+        </button>
+      </div>
+    </div>
+  );
+}
+function ScratchFortune({ message }) {
+  const canvasRef = useRef(null);
+  const scratchingRef = useRef(false);
+  const [revealed, setRevealed] = useState(false);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const rect = canvas.getBoundingClientRect();
+    const ratio = window.devicePixelRatio || 1;
+    const context = canvas.getContext("2d");
+
+    canvas.width = Math.floor(rect.width * ratio);
+    canvas.height = Math.floor(rect.height * ratio);
+
+    context.setTransform(ratio, 0, 0, ratio, 0, 0);
+    context.globalCompositeOperation = "source-over";
+
+    const gradient = context.createLinearGradient(
+      0,
+      0,
+      rect.width,
+      rect.height
+    );
+
+    gradient.addColorStop(0, "#b88735");
+    gradient.addColorStop(0.5, "#f4dfa4");
+    gradient.addColorStop(1, "#c9a24a");
+
+    context.fillStyle = gradient;
+    context.fillRect(0, 0, rect.width, rect.height);
+
+    context.fillStyle = "#6d1f2d";
+    context.font = "700 17px Georgia";
+    context.textAlign = "center";
+    context.textBaseline = "middle";
+
+    context.fillText(
+      "Scratch to reveal your blessing ✨",
+      rect.width / 2,
+      rect.height / 2
+    );
+  }, []);
+
+  const scratch = (event) => {
+    if (!scratchingRef.current || revealed) return;
+
+    event.preventDefault();
+
+    const canvas = canvasRef.current;
+    const context = canvas.getContext("2d");
+    const rect = canvas.getBoundingClientRect();
+
+    const x = event.clientX - rect.left;
+    const y = event.clientY - rect.top;
+
+    context.globalCompositeOperation = "destination-out";
+    context.beginPath();
+    context.arc(x, y, 28, 0, Math.PI * 2);
+    context.fill();
+  };
+
+  const stopScratching = () => {
+    if (!scratchingRef.current) return;
+
+    scratchingRef.current = false;
+
+    const canvas = canvasRef.current;
+    const context = canvas.getContext("2d");
+
+    const pixels = context.getImageData(
+      0,
+      0,
+      canvas.width,
+      canvas.height
+    ).data;
+
+    let transparent = 0;
+
+    for (let index = 3; index < pixels.length; index += 4) {
+      if (pixels[index] < 50) {
+        transparent += 1;
+      }
+    }
+
+    const percentage =
+      (transparent / (pixels.length / 4)) * 100;
+
+    if (percentage >= 30) {
+      setRevealed(true);
+    }
+  };
+
+  return (
+    <div className="scratchFortune">
+      <div className="fortuneContent">
+        <span className="fortuneIcon">🪔</span>
+
+        <p className="fortuneLabel">
+          A Wedding Blessing Just for You
+        </p>
+
+        <p className="fortuneText">
+          {message || "May happiness and prosperity always remain with you."}
+        </p>
+      </div>
+
+      {!revealed && (
+        <canvas
+          ref={canvasRef}
+          className="scratchCanvas"
+          onPointerDown={(event) => {
+            scratchingRef.current = true;
+            event.currentTarget.setPointerCapture(event.pointerId);
+            scratch(event);
+          }}
+          onPointerMove={scratch}
+          onPointerUp={stopScratching}
+          onPointerCancel={stopScratching}
+          onPointerLeave={stopScratching}
+        />
+      )}
+    </div>
+  );
+}
+const fortuneMessages = [
+  "🌸 May Lord Ganesha remove every obstacle and fill your life with endless happiness.",
+  "✨ May love, peace, and prosperity always find their way to your home.",
+  "💛 May every sunrise bring you new opportunities and joyful moments.",
+  "🌺 Wishing you a lifetime filled with laughter, health, and cherished memories.",
+  "🪔 May your family always be surrounded by warmth, kindness, and togetherness.",
+  "💐 Good things are on their way—embrace every beautiful moment.",
+  "🌿 May every step you take lead to success and happiness.",
+  "❤️ May your heart always find reasons to smile.",
+  "🌞 Wishing you abundance, peace, and unforgettable adventures.",
+  "🌸 May your kindness return to you a hundredfold.",
+  "✨ May happiness bloom in every season of your life.",
+  "💛 May every dream you hold close become reality.",
+  "🌺 The best chapters of your story are still waiting to be written.",
+  "🪔 May your journey always be guided by hope and love.",
+  "🌼 Wishing you strength during challenges and joy in every success.",
+  "🌈 Brighter days are just around the corner.",
+  "🌷 May every celebration in your life be filled with people who truly care about you.",
+  "💖 Your presence is a blessing—never underestimate the joy you bring to others.",
+  "🌿 May every path you choose lead to wonderful experiences.",
+  "⭐ May good fortune follow you wherever life takes you.",
+  "🙏 May your home always echo with laughter and happiness.",
+  "💫 The universe has wonderful surprises waiting just for you.",
+  "🌸 Every ending is the beginning of something even more beautiful.",
+  "✨ Wishing you countless reasons to celebrate life.",
+  "💛 May your heart stay light and your spirit stay strong.",
+  "🌺 May every challenge become a stepping stone to success.",
+  "🕊️ Peace, love, and happiness—today and always.",
+  "🌷 May your friendships grow stronger and your dreams grow bigger.",
+  "🌞 Every new day is another chance for something amazing.",
+  "🍀 Good luck is already finding its way to you.",
+  "🌻 Stay hopeful—beautiful things often arrive unexpectedly.",
+  "💖 May you always be surrounded by genuine love and kindness.",
+  "🌼 Wishing you endless reasons to smile today and every day.",
+  "🌙 May every night bring peace and every morning bring hope.",
+  "🪷 May blessings overflow into every corner of your life.",
+  "💐 Happiness multiplies when shared—thank you for sharing ours.",
+  "🌈 Your presence has made our celebration even more meaningful.",
+  "✨ A beautiful journey awaits you—enjoy every step.",
+  "🌺 May health, happiness, and harmony always stay with you.",
+  "💛 Your kindness makes the world brighter.",
+  "🌸 May every wish in your heart find its perfect moment.",
+  "⭐ Keep believing—good things are closer than you think.",
+  "🌿 May your future be filled with exciting adventures and beautiful memories.",
+  "🪔 May every festival, celebration, and gathering bring your family closer.",
+  "❤️ Wishing you love that grows stronger every single day.",
+  "🌼 May life always surprise you with moments worth remembering.",
+  "💫 Today is another reminder that beautiful memories are created together.",
+  "🌷 Thank you for being part of our special journey.",
+  "🙏 May you always have reasons to celebrate, smile, and be grateful.",
+  "✨ Love shared is love multiplied. Thank you for sharing ours."
+];
+function RSVP({ guest, invitedEvents }) {
   const [form, setForm] = useState({
-    name: "",
+    name: guest.name,
     email: "",
-    phone: "",
+    phone: guest.phone,
     groupSize: 1,
     rsvps: {},
   });
@@ -261,12 +618,21 @@ function RSVP() {
   const confirmationRef = useRef(null);
   const max = Number(form.groupSize) || 1;
 
+const [fortuneMessage] = useState(() => {
+  const index = Math.floor(
+    Math.random() * fortuneMessages.length
+  );
+
+  return fortuneMessages[index];
+});
+
   useEffect(() => {
     if (!submitted) return;
     try {
       if (confirmationRef.current) {
         confirmationRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
         confirmationRef.current.focus();
+        <ScratchFortune message={fortuneMessage} />
       } else {
         window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
       }
@@ -275,92 +641,196 @@ function RSVP() {
     }
   }, [submitted]);
 
-  const update = (id, obj) =>
-    setForm((f) => ({
-      ...f,
+  const update = (eventId, changes) => {
+  setForm((currentForm) => ({
+    ...currentForm,
+    rsvps: {
+      ...currentForm.rsvps,
+      [eventId]: {
+        attending: false,
+        adults: 0,
+        kids: 0,
+        ...(currentForm.rsvps[eventId] || {}),
+        ...changes,
+      },
+    },
+  }));
+};
+
+const changeGuestCount = (eventId, type, amount) => {
+  setForm((currentForm) => {
+    const currentEvent = currentForm.rsvps[eventId] || {
+      attending: true,
+      adults: 0,
+      kids: 0,
+    };
+
+    const currentValue = Number(currentEvent[type]) || 0;
+    const nextValue = Math.max(0, currentValue + amount);
+
+    return {
+      ...currentForm,
       rsvps: {
-        ...f.rsvps,
-        [id]: {
-          ...(f.rsvps[id] || { attending: false, count: 0 }),
-          ...obj,
+        ...currentForm.rsvps,
+        [eventId]: {
+          ...currentEvent,
+          attending: true,
+          [type]: nextValue,
         },
       },
-    }));
+    };
+  });
+};
 
+const formatEventStatus = (attending, adults, kids) => {
+  if (!attending) {
+    return "Not Attending";
+  }
+
+  return `Attending
+Adults: ${adults}
+Kids: ${kids}`;
+};
   const submit = async (e) => {
   e.preventDefault();
 
-  const eventIds = events.map((event) => event.id);
 
   if (!form.name.trim()) return alert("Please enter your name.");
   if (!form.email.trim()) return alert("Please enter your email.");
 
   const emailKey = form.email.trim().toLowerCase();
 
-  const getEvent = (id) => {
-    const event = form.rsvps?.[id] || {};
-    const attending = !!event.attending;
+  const getEvent = (eventId) => {
+  const eventResponse = form.rsvps?.[eventId] || {};
 
-    return {
-      attending,
-      guests: attending ? Number(event.count) || 1 : 0,
-    };
+  const attending = Boolean(eventResponse.attending);
+
+  return {
+    attending,
+    adults: attending
+      ? Math.max(0, Number(eventResponse.adults) || 0)
+      : 0,
+    kids: attending
+      ? Math.max(0, Number(eventResponse.kids) || 0)
+      : 0,
   };
+};
 
   const prelude = getEvent("prelude");
   const haldi = getEvent("traditions");
   const wedding = getEvent("muhurtham");
 
   const payload = {
-    name: form.name.trim(),
-    email: emailKey,
-    phone: form.phone.trim(),
-    groupSize: Number(form.groupSize) || 1,
+  inviteType: guest.inviteType,
+  name: form.name.trim(),
+  email: emailKey,
+  phone: form.phone.trim(),
 
-    preludeAttending: prelude.attending,
-    preludeGuests: prelude.guests,
+  preludeAttending: prelude.attending,
+  preludeAdults: prelude.adults,
+  preludeKids: prelude.kids,
 
-    haldiAttending: haldi.attending,
-    haldiGuests: haldi.guests,
+  haldiAttending: haldi.attending,
+  haldiAdults: haldi.adults,
+  haldiKids: haldi.kids,
 
-    weddingAttending: wedding.attending,
-    weddingGuests: wedding.guests,
+  weddingAttending: wedding.attending,
+  weddingAdults: wedding.adults,
+  weddingKids: wedding.kids,
 
-    rsvps: {
-      prelude,
-      haldi,
-      wedding,
-    },
+  rsvps: {
+    prelude,
+    haldi,
+    wedding,
+  },
 
-    updatedAt: serverTimestamp(),
-  };
+  updatedAt: serverTimestamp(),
+};
 
   try {
-  await setDoc(doc(db, "rsvps", emailKey), payload, {
+  await setDoc(doc(db, "rsvps", guest.phone), payload, {
     merge: true,
   });
 
-  await emailjs.send(
-    "service_ao3gy1t",
-    "template_gjl4a5l",
-    {
-      guest_name: payload.name,
-      guest_email: payload.email,
+  const isVip = invitedEvents.some(
+  (event) => event.id !== "muhurtham"
+);
 
-      prelude_status: payload.preludeAttending
-        ? `Attending (${payload.preludeGuests} Guest${payload.preludeGuests > 1 ? "s" : ""})`
-        : "Not Attending",
+console.log("Guest:", guest);
+console.log("Invited Events:", invitedEvents);
+console.log("isVip:", invitedEvents.some(event => event.id !== "muhurtham"));
 
-      haldi_status: payload.haldiAttending
-        ? `Attending (${payload.haldiGuests} Guest${payload.haldiGuests > 1 ? "s" : ""})`
-        : "Not Attending",
+const eventDetails = isVip
+  ? `
+🎶 Sangeet Night
+${formatEventStatus(
+  payload.preludeAttending,
+  payload.preludeAdults,
+  payload.preludeKids
+)}
 
-      wedding_status: payload.weddingAttending
-        ? `Attending (${payload.weddingGuests} Guest${payload.weddingGuests > 1 ? "s" : ""})`
-        : "Not Attending",
-    },
-    "8S9vafjYNbuTwGQjx"
-  );
+🌼 Haldi & Engagement
+${formatEventStatus(
+  payload.haldiAttending,
+  payload.haldiAdults,
+  payload.haldiKids
+)}
+
+🤵👰 Wedding Ceremony
+${formatEventStatus(
+  payload.weddingAttending,
+  payload.weddingAdults,
+  payload.weddingKids
+)}
+`
+  : `
+🤵👰 Wedding Ceremony
+${formatEventStatus(
+  payload.weddingAttending,
+  payload.weddingAdults,
+  payload.weddingKids
+)}
+`;
+
+const eventInformation = isVip
+  ? `
+🎶 Sangeet Night
+📅 28 August 2026
+📍 Biriyani City, Hillsborough, NJ
+
+🌼 Haldi & Engagement
+📅 29 August 2026
+📍 Serene Spring Farms, Hillsborough, NJ
+
+🤵👰 Wedding Ceremony
+📅 30 August 2026
+📍 Royal Albert Palace, Fords, NJ
+`
+  : `
+🤵👰 Wedding Ceremony
+📅 30 August 2026
+📍 Royal Albert Palace, Fords, NJ
+`;
+
+const websiteUrl =
+  `https://harineethawedding.com/?name=${encodeURIComponent(payload.name)}` +
+  `&phone=${encodeURIComponent(payload.phone)}`;
+
+console.log("Email website URL:", websiteUrl);
+
+await emailjs.send(
+  "service_ao3gy1t",
+  "template_gjl4a5l",
+  {
+    guest_name: payload.name,
+    guest_email: payload.email,
+    guest_phone: payload.phone,
+    event_details: eventDetails,
+    event_information: eventInformation,
+    website_url: websiteUrl,
+  },
+  "8S9vafjYNbuTwGQjx"
+);
 
   if (payload.preludeAttending || payload.haldiAttending || payload.weddingAttending) {
     confetti();
@@ -394,6 +864,7 @@ function RSVP() {
               <p>Thank you for your love and support.</p>
             </>
           )}
+          <ScratchFortune message={fortuneMessage} />
         </div>
       </section>
     );
@@ -406,9 +877,10 @@ function RSVP() {
       <form onSubmit={submit} className="rsvpCard">
         <input
           required
+          readOnly
           placeholder="Full Name"
           value={form.name}
-          onChange={(e) => setForm({ ...form, name: e.target.value })}
+          className="readonlyInput"
         />
 
         <input
@@ -421,75 +893,83 @@ function RSVP() {
 
         <input
           required
+          readOnly
           placeholder="Phone Number"
           value={form.phone}
-          onChange={(e) => setForm({ ...form, phone: e.target.value })}
+          className="readonlyInput"
         />
 
-        <label>
-          Total Group Size
-          <select
-            value={form.groupSize}
-            onChange={(e) =>
-              setForm({ ...form, groupSize: Number(e.target.value) })
+        {invitedEvents.map((ev) => {
+  const response = form.rsvps[ev.id] || {
+    attending: false,
+    adults: 0,
+    kids: 0,
+  };
+
+  return (
+    <div className="rsvpEvent" key={ev.id}>
+      <h3>
+        {ev.icon} {ev.title}
+      </h3>
+
+      <div className="toggle">
+        <button
+          type="button"
+          className={response.attending ? "active" : ""}
+          onClick={() =>
+            update(ev.id, {
+              attending: true,
+              adults: response.adults || 1,
+              kids: response.kids || 0,
+            })
+          }
+        >
+          Attending
+        </button>
+
+        <button
+          type="button"
+          className={!response.attending ? "active muted" : ""}
+          onClick={() =>
+            update(ev.id, {
+              attending: false,
+              adults: 0,
+              kids: 0,
+            })
+          }
+        >
+          Not Attending
+        </button>
+      </div>
+
+      {response.attending && (
+        <div className="guestCounters">
+          <GuestCounter
+            label="Adults"
+            value={response.adults || 0}
+            onDecrease={() =>
+              changeGuestCount(ev.id, "adults", -1)
             }
-          >
-            {Array.from({ length: 15 }, (_, i) => i + 1).map((n) => (
-              <option key={n} value={n}>
-                {n} Guest{n > 1 ? "s" : ""}
-              </option>
-            ))}
-          </select>
-        </label>
+            onIncrease={() =>
+              changeGuestCount(ev.id, "adults", 1)
+            }
+          />
 
-        {events.map((ev) => {
-          const r = form.rsvps[ev.id] || { attending: false, count: 0 };
-
-          return (
-            <div className="rsvpEvent" key={ev.id}>
-              <h3>
-                {ev.icon} {ev.title}
-              </h3>
-
-              <div className="toggle">
-                <button
-                  type="button"
-                  className={r.attending ? "active" : ""}
-                  onClick={() =>
-                    update(ev.id, { attending: true, count: r.count || 1 })
-                  }
-                >
-                  Attending
-                </button>
-
-                <button
-                  type="button"
-                  className={!r.attending ? "active muted" : ""}
-                  onClick={() =>
-                    update(ev.id, { attending: false, count: 0 })
-                  }
-                >
-                  Not Attending
-                </button>
-              </div>
-
-              {r.attending && (
-                <select
-                  value={r.count}
-                  onChange={(e) =>
-                    update(ev.id, { count: Number(e.target.value) })
-                  }
-                >
-                  {Array.from({ length: max }, (_, i) => i + 1).map((n) => (
-                    <option key={n} value={n}>
-                      {n} Guest{n > 1 ? "s" : ""}
-                    </option>
-                  ))}
-                </select>
-              )}
-            </div>
-          );
-        })}
+          <GuestCounter
+            label="Kids"
+            value={response.kids || 0}
+            onDecrease={() =>
+              changeGuestCount(ev.id, "kids", -1)
+            }
+            onIncrease={() =>
+              changeGuestCount(ev.id, "kids", 1)
+            }
+          />
+        </div>
+      )}
+    </div>
+  );
+})}
 
         <button className="submit">Submit RSVP</button>
       </form>
@@ -499,39 +979,173 @@ function RSVP() {
 function InfoSections() { return <>{giftRegistry.enabled && <section className="section soft"><h2>{giftRegistry.title}</h2><p>{giftRegistry.description}</p><a className="primary" href={giftRegistry.link}>{giftRegistry.buttonText}</a></section>}{liveStream.enabled && <section className="section soft"><h2>{liveStream.title}</h2><p>{liveStream.description}</p><a className="primary" href={liveStream.youtubeLink}>{liveStream.buttonText}</a><small>{liveStream.note}</small></section>}</> }
 function Footer() { return <footer><h2>{couple.logo}</h2><p>Every journey has a destination. Ours begins here.</p></footer> }
 function App() {
+  const [guest, setGuest] = useState(() => {
+    try {
+      const savedGuest = localStorage.getItem("weddingGuest");
+      return savedGuest ? JSON.parse(savedGuest) : null;
+    } catch {
+      return null;
+    }
+  });
+
   const [open, setOpen] = useState(false);
+  const [restoringGuest, setRestoringGuest] = useState(true);
   const bookOpenAudioRef = useRef(null);
+
+  
+  useEffect(() => {
+    const restoreGuestFromEmailLink = async () => {
+      const params = new URLSearchParams(window.location.search);
+
+      const linkedName = params.get("name")?.trim() || "";
+      const linkedPhone = normalizePhone(params.get("phone") || "");
+
+      // Normal website visit without email parameters
+      if (!linkedName || linkedPhone.length !== 10) {
+        setRestoringGuest(false);
+        return;
+      }
+
+      try {
+        const invitationRef = doc(
+          db,
+          "invitations",
+          linkedPhone
+        );
+
+        const invitationSnap = await getDoc(invitationRef);
+
+        let inviteType = "wedding";
+        let displayName = linkedName;
+
+        if (invitationSnap.exists()) {
+          const invitationData = invitationSnap.data();
+          const savedName = invitationData.name || "";
+
+          if (namesMatch(savedName, linkedName)) {
+            inviteType = "all";
+            displayName = savedName || linkedName;
+          }
+        }
+
+        const linkedGuest = {
+          name: displayName,
+          phone: linkedPhone,
+          inviteType,
+        };
+
+        localStorage.setItem(
+          "weddingGuest",
+          JSON.stringify(linkedGuest)
+        );
+
+        setGuest(linkedGuest);
+
+        // Open the website directly when coming from email
+        setOpen(true);
+
+        // Remove personal information from the visible URL
+        window.history.replaceState(
+          {},
+          document.title,
+          window.location.pathname
+        );
+      } catch (error) {
+        console.error(
+          "Unable to restore guest from email link:",
+          error
+        );
+      } finally {
+        setRestoringGuest(false);
+      }
+    };
+
+    restoreGuestFromEmailLink();
+  }, []);
+
   useEffect(() => {
     try {
-      window.scrollTo({ top: 0, left: 0 });
-    } catch (e) {
-      // ignore in non-browser environments
+      window.scrollTo({
+        top: 0,
+        left: 0,
+      });
+    } catch {
+      // Ignore browser scroll errors
     }
   }, []);
+
+  const handleGuestContinue = (guestData) => {
+    localStorage.setItem(
+      "weddingGuest",
+      JSON.stringify(guestData)
+    );
+
+    setGuest(guestData);
+  };
 
   const handleOpenInvitation = () => {
     setOpen(true);
 
     const audio = bookOpenAudioRef.current;
+
     if (audio) {
       audio.currentTime = 0;
       audio.play().catch(() => {});
     }
   };
 
+  if (restoringGuest) {
+    return (
+      <section className="welcome">
+        <p>Opening your invitation…</p>
+      </section>
+    );
+  }
+
+  if (!guest) {
+    return (
+      <InvitationAccess
+        onContinue={handleGuestContinue}
+      />
+    );
+  }
+
+  const invitedEvents =
+    guest.inviteType === "all"
+      ? events
+      : events.filter(
+          (event) => event.id === "muhurtham"
+        );
+
   return (
     <>
-      <Welcome open={open} onOpenInvitation={handleOpenInvitation} />
+      <Welcome
+        open={open}
+        onOpenInvitation={handleOpenInvitation}
+      />
+
       <Hero open={open} />
       <Countdown />
       <Story />
-      <Events />
+
+      <Events invitedEvents={invitedEvents} />
+
       <Gallery />
-      <RSVP />
+
+      <RSVP
+        guest={guest}
+        invitedEvents={invitedEvents}
+      />
+
       <InfoSections />
       <Footer />
       <MusicButton opened={open} />
-      <audio ref={bookOpenAudioRef} preload="auto" src={asset('bookopen.mp3')} />
+
+      <audio
+        ref={bookOpenAudioRef}
+        preload="auto"
+        src={asset("bookopen.mp3")}
+      />
     </>
   );
 }
