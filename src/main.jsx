@@ -1178,11 +1178,13 @@ function App() {
   );
 }
 
-const root = ReactDOM.createRoot(document.getElementById("root"));
+const root = ReactDOM.createRoot(
+  document.getElementById("root")
+);
 
-const currentPath = window.location.pathname.replace(/\/+$/, "");
+const currentRoute = window.location.hash.toLowerCase();
 
-if (currentPath === "/admin") {
+if (currentRoute === "#/admin") {
   root.render(
     <React.StrictMode>
       <AdminDashboard />
