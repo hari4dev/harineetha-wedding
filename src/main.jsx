@@ -582,7 +582,7 @@ function ScratchFortune({ message }) {
   );
 }
 const fortuneMessages = [
-  "🌸 May Lord Ganesha remove every obstacle and fill your life with endless happiness.",
+  "🌸 May Lord remove every obstacle and fill your life with endless happiness.",
   "✨ May love, peace, and prosperity always find their way to your home.",
   "💛 May every sunrise bring you new opportunities and joyful moments.",
   "🌺 Wishing you a lifetime filled with laughter, health, and cherished memories.",
