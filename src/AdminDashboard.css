@@ -1,0 +1,375 @@
+.admin-dashboard,
+.admin-login-page {
+  min-height: 100vh;
+  background:
+    radial-gradient(
+      circle at top left,
+      rgba(177, 126, 36, 0.13),
+      transparent 35%
+    ),
+    #fffaf1;
+  color: #322316;
+  font-family: Georgia, "Times New Roman", serif;
+}
+
+.admin-login-page {
+  display: grid;
+  place-items: center;
+  padding: 24px;
+}
+
+.admin-login-card {
+  width: min(100%, 420px);
+  box-sizing: border-box;
+  padding: 42px 32px;
+  background: rgba(255, 255, 255, 0.96);
+  border: 1px solid #d7b36c;
+  border-radius: 24px;
+  box-shadow: 0 20px 60px rgba(77, 42, 11, 0.14);
+  text-align: center;
+}
+
+.admin-login-card h1 {
+  margin: 8px 0;
+  color: #7a1919;
+}
+
+.admin-login-card input {
+  width: 100%;
+  box-sizing: border-box;
+  margin-top: 20px;
+  padding: 14px 16px;
+  border: 1px solid #caa764;
+  border-radius: 10px;
+  font: inherit;
+}
+
+.admin-login-card button,
+.admin-actions button {
+  padding: 12px 20px;
+  border: 0;
+  border-radius: 10px;
+  background: #7a1919;
+  color: #ffffff;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.admin-login-card button {
+  width: 100%;
+  margin-top: 14px;
+}
+
+.admin-actions button:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+
+.admin-dashboard {
+  box-sizing: border-box;
+  padding: 32px;
+}
+
+.admin-header {
+  max-width: 1400px;
+  margin: 0 auto 28px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.admin-header h1 {
+  margin: 4px 0;
+  color: #7a1919;
+  font-size: clamp(2rem, 4vw, 3.4rem);
+}
+
+.admin-header p {
+  margin: 5px 0;
+}
+
+.admin-eyebrow {
+  margin: 0;
+  color: #a06b13;
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.admin-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.admin-actions .admin-logout {
+  background: #545454;
+}
+
+.admin-summary-grid {
+  max-width: 1400px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 20px;
+}
+
+.admin-event-card {
+  padding: 26px;
+  background: #ffffff;
+  border: 1px solid rgba(168, 111, 25, 0.35);
+  border-radius: 20px;
+  box-shadow: 0 12px 35px rgba(72, 42, 12, 0.08);
+}
+
+.admin-event-card h2 {
+  margin: 5px 0 8px;
+  color: #6f1717;
+}
+
+.admin-event-date {
+  color: #9a681b;
+  font-size: 0.9rem;
+}
+
+.admin-event-venue {
+  min-height: 38px;
+  margin-bottom: 20px;
+  color: #6f6255;
+}
+
+.admin-count-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+}
+
+.admin-count-row div {
+  padding: 12px 6px;
+  background: #fff7e8;
+  border-radius: 12px;
+  text-align: center;
+}
+
+.admin-count-row strong {
+  display: block;
+  color: #7a1919;
+  font-size: 1.7rem;
+}
+
+.admin-count-row span {
+  display: block;
+  margin-top: 4px;
+  font-family: Arial, sans-serif;
+  font-size: 0.72rem;
+}
+
+.admin-table-section {
+  max-width: 1400px;
+  box-sizing: border-box;
+  margin: 0 auto;
+  padding: 24px;
+  background: #ffffff;
+  border-radius: 20px;
+  box-shadow: 0 12px 35px rgba(72, 42, 12, 0.08);
+}
+
+.admin-table-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 15px;
+}
+
+.admin-table-heading h2,
+.admin-table-heading p {
+  margin: 4px 0;
+}
+
+.admin-table-wrapper {
+  overflow-x: auto;
+}
+
+.admin-table-section table {
+  width: 100%;
+  margin-top: 18px;
+  border-collapse: collapse;
+  font-family: Arial, sans-serif;
+  font-size: 0.9rem;
+}
+
+.admin-table-section th,
+.admin-table-section td {
+  padding: 13px 12px;
+  border-bottom: 1px solid #eadfcf;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.admin-table-section th {
+  background: #fff5e4;
+  color: #701919;
+}
+
+.attending {
+  color: #16723a;
+  font-weight: 600;
+}
+
+.not-attending {
+  color: #8b8b8b;
+}
+
+.admin-empty,
+.admin-message {
+  padding: 30px;
+  text-align: center;
+}
+
+.admin-error {
+  max-width: 1400px;
+  box-sizing: border-box;
+  margin: 0 auto 20px;
+  padding: 20px;
+  border: 1px solid #dc9b9b;
+  border-radius: 12px;
+  background: #fff0f0;
+  color: #b00020;
+}
+
+@media (max-width: 1000px) {
+  .admin-summary-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 700px) {
+  .admin-dashboard {
+    padding: 18px;
+  }
+
+  .admin-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .admin-count-row {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .admin-overall-card {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-table-section {
+    padding: 16px;
+  }
+}
+
+@media (max-width: 1100px) {
+  .admin-summary-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 700px) {
+  .admin-dashboard {
+    padding: 18px;
+  }
+
+  .admin-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .admin-event-card {
+    padding: 20px;
+  }
+
+  .admin-count-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .admin-table-section {
+    padding: 16px;
+  }
+}
+
+.admin-summary-grid {
+  max-width: 1400px;
+  margin: 0 auto 24px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 20px;
+}
+
+.admin-event-card {
+  min-width: 0;
+  box-sizing: border-box;
+  overflow: hidden;
+  padding: 24px;
+  background: #ffffff;
+  border: 1px solid rgba(168, 111, 25, 0.35);
+  border-radius: 20px;
+  box-shadow: 0 12px 35px rgba(72, 42, 12, 0.08);
+}
+
+.admin-event-card h2 {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  margin: 6px 0 8px;
+  color: #6f1717;
+  font-size: clamp(1.25rem, 2vw, 1.7rem);
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+  word-break: normal;
+  white-space: normal;
+}
+
+.admin-event-date {
+  margin: 0;
+  color: #9a681b;
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+.admin-event-venue {
+  min-height: 42px;
+  margin: 8px 0 20px;
+  color: #6f6255;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+  white-space: normal;
+}
+
+.admin-count-row {
+  width: 100%;
+  min-width: 0;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.admin-count-row div {
+  min-width: 0;
+  padding: 12px 4px;
+  background: #fff7e8;
+  border-radius: 12px;
+  text-align: center;
+}
+
+.admin-count-row strong {
+  display: block;
+  color: #7a1919;
+  font-size: 1.6rem;
+}
+
+.admin-count-row span {
+  display: block;
+  margin-top: 4px;
+  font-family: Arial, sans-serif;
+  font-size: 0.7rem;
+  overflow-wrap: anywhere;
+}

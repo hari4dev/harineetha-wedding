@@ -1,5 +1,6 @@
 import React, { useMemo, useRef, useState, useEffect } from 'react';
 import { createRoot } from 'react-dom/client';
+import ReactDOM from "react-dom/client";
 import { motion, AnimatePresence } from 'framer-motion';
 import confetti from 'canvas-confetti';
 import { couple, events, story, galleryImages, giftRegistry, liveStream, musicConfig } from './data/siteContent';
@@ -7,6 +8,7 @@ import './styles.css';
 import { doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore";
 import { db } from "./firebase";
 import emailjs from "@emailjs/browser";
+import AdminDashboard from "./AdminDashboard";
 
 const ASSET_BASE = import.meta.env.BASE_URL || '/';
 const musicSrc = `${ASSET_BASE}music/wedding.mp3`;
@@ -1176,4 +1178,20 @@ function App() {
   );
 }
 
-createRoot(document.getElementById('root')).render(<App />);
+const root = ReactDOM.createRoot(document.getElementById("root"));
+
+const currentPath = window.location.pathname.replace(/\/+$/, "");
+
+if (currentPath === "/admin") {
+  root.render(
+    <React.StrictMode>
+      <AdminDashboard />
+    </React.StrictMode>
+  );
+} else {
+  root.render(
+    <React.StrictMode>
+      <App />
+    </React.StrictMode>
+  );
+}
