@@ -12,6 +12,7 @@ import {
   signInWithEmailAndPassword,
   signOut,
 } from "firebase/auth";
+import VipGuestManager from "./VipGuestManager";
 
 import { auth, db } from "./firebase";
 
@@ -335,7 +336,7 @@ const [checkingAuth, setCheckingAuth] = useState(true);
           </button>
         </div>
       </header>
-
+<VipGuestManager />
       {loading && responses.length === 0 && (
         <p className="admin-message">
           Loading RSVP responses...

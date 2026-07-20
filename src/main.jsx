@@ -57,23 +57,36 @@ function InvitationAccess({ onContinue }) {
     setChecking(true);
 
     try {
-      const invitationRef = doc(db, "invitations", normalizedPhone);
-      const invitationSnap = await getDoc(invitationRef);
+     const invitationRef = doc(
+  db,
+  "invitations",
+  normalizedPhone
+);
 
-      let inviteType = "wedding";
-let displayName = enteredName;
+const invitationSnap = await getDoc(invitationRef);
+
+let inviteType = "wedding";
+let verifiedInvitationName = enteredName.trim();
 
 if (invitationSnap.exists()) {
   const invitationData = invitationSnap.data();
 
-  if (namesMatch(invitationData.name || "", enteredName)) {
-    inviteType = "all";
-    displayName = invitationData.name || enteredName;
+  if (
+    namesMatch(
+      invitationData.name || "",
+      enteredName
+    )
+  ) {
+    inviteType = invitationData.inviteType || "all";
+
+    verifiedInvitationName =
+      invitationData.name || enteredName.trim();
   }
 }
 
 const guest = {
-  name: displayName,
+  invitationName: verifiedInvitationName,
+  preferredName: verifiedInvitationName,
   phone: normalizedPhone,
   inviteType,
 };
@@ -633,14 +646,37 @@ const fortuneMessages = [
   "🙏 May you always have reasons to celebrate, smile, and be grateful.",
   "✨ Love shared is love multiplied. Thank you for sharing ours."
 ];
+
+function getSavedWeddingGuest() {
+  try {
+    return JSON.parse(
+      localStorage.getItem("weddingGuest") || "{}"
+    );
+  } catch {
+    return {};
+  }
+}
 function RSVP({ guest, invitedEvents }) {
+  const savedGuest = getSavedWeddingGuest();
+
+  const currentGuest = {
+    ...savedGuest,
+    ...guest,
+  };
+
   const [form, setForm] = useState({
-    name: guest.name,
+    name:
+      currentGuest.preferredName ||
+      currentGuest.invitationName ||
+      currentGuest.name ||
+      "",
     email: "",
-    phone: guest.phone,
-    groupSize: 1,
+    phone: currentGuest.phone || "",
+    inviteType:
+      currentGuest.inviteType || "wedding",
     rsvps: {},
   });
+   const [error, setError] = useState("");
 
   const [submitted, setSubmitted] = useState(false);
   const confirmationRef = useRef(null);
@@ -653,6 +689,8 @@ const [fortuneMessage] = useState(() => {
 
   return fortuneMessages[index];
 });
+
+
 
   useEffect(() => {
     if (!submitted) return;
@@ -903,13 +941,17 @@ await emailjs.send(
       <h2>RSVP</h2>
 
       <form onSubmit={submit} className="rsvpCard">
-        <input
-          required
-          readOnly
-          placeholder="Full Name"
-          value={form.name}
-          className="readonlyInput"
-        />
+       <input
+  required
+  placeholder="Preferred Name"
+  value={form.name}
+  onChange={(e) =>
+    setForm({
+      ...form,
+      name: e.target.value,
+    })
+  }
+/>
 
         <input
           required
@@ -1004,7 +1046,61 @@ await emailjs.send(
     </section>
   );
 }
-function InfoSections() { return <>{giftRegistry.enabled && <section className="section soft"><h2>{giftRegistry.title}</h2><p>{giftRegistry.description}</p><a className="primary" href={giftRegistry.link}>{giftRegistry.buttonText}</a></section>}{liveStream.enabled && <section className="section soft"><h2>{liveStream.title}</h2><p>{liveStream.description}</p><a className="primary" href={liveStream.youtubeLink}>{liveStream.buttonText}</a><small>{liveStream.note}</small></section>}</> }
+function InfoSections() {
+  return (
+  <>
+    {giftRegistry.enabled && (
+      <section className="section soft">
+        <h2>{giftRegistry.title}</h2>
+        <p>{giftRegistry.description}</p>
+
+        <div className="registryGrid">
+          {giftRegistry.registries.map((registry) => (
+            <div className="registryCard" key={registry.name}>
+              
+              <div className="registryImageBox">
+                <img
+                  src={registry.image}
+                  alt={registry.name}
+                  className="registryImage"
+                />
+              </div>
+
+              <a
+                className="primary"
+                href={registry.link}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                {registry.buttonText}
+              </a>
+
+            </div>
+          ))}
+        </div>
+      </section>
+    )}
+
+    {liveStream.enabled && (
+      <section className="section soft">
+        <h2>{liveStream.title}</h2>
+        <p>{liveStream.description}</p>
+
+        <a
+          className="primary"
+          href={liveStream.youtubeLink}
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          {liveStream.buttonText}
+        </a>
+
+        <small>{liveStream.note}</small>
+      </section>
+    )}
+  </>
+);
+}
 function Footer() { return <footer><h2>{couple.logo}</h2><p>Every journey has a destination. Ours begins here.</p></footer> }
 function App() {
   const [guest, setGuest] = useState(() => {

@@ -21,6 +21,26 @@ export const galleryImages = [
   { id:3, title:'Forever Mood', image:`${ASSET_BASE}images/gallery/photo-3.jpg`, category:'Celebration' }
 ];
 
-export const giftRegistry = { enabled:true, title:'With Love & Gratitude', description:'Your presence, love, and blessings are the greatest gifts we could ever ask for. For those who have thoughtfully expressed a desire to celebrate this new chapter with a gift, we’ve created a small registry for your convenience.', buttonText:'View Our Registry', link:'#' };
+export const giftRegistry = {
+  enabled: true,
+  title: "Gift Registry",
+  description:
+    "Your love and blessings mean the world to us. If you'd like to honor us with a gift, we've created a few registry options below.",
+
+  registries: [
+    {
+      name: "Amazon",
+      image: "images/Amazon.jpg",
+      buttonText: "View Registry",
+      link: "https://www.amazon.com/wedding/share/HariNeethaWedding2026",
+    },
+    {
+      name: "Target",
+      buttonText: "View Registry",
+      image: "images/Target.png",
+      link: "https://www.target.com/gift-registry/gift/harineethawedding2026",
+    }
+  ],
+};
 export const liveStream = { enabled:true, title:'Celebrate With Us Virtually', description:'For our loved ones who cannot join us in person, we’ll share the live stream link here closer to the wedding.', buttonText:'Watch Live', youtubeLink:'#', note:'Live stream link will be available soon.' };
 export const musicConfig = { enabled:true, autoplayAfterOpen:true, volume:0.22, buttonTextOn:'Music On', buttonTextOff:'Music Off' };
